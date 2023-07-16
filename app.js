@@ -59,9 +59,12 @@ app.get('/flights', (req, res) => {
         .then(r => {
             return r.json()
         })
-        .then(r => r.response.sort((p1, p2) =>
-            (p1.dep_time_ts > p2.dep_time_ts) ? 1 :
-                (p1.dep_time_ts < p2.dep_time_ts) ? -1 : 0))
+        .then(r => {
+            console.log(r);
+            return r.response.sort((p1, p2) =>
+                (p1.dep_time_ts > p2.dep_time_ts) ? 1 :
+                    (p1.dep_time_ts < p2.dep_time_ts) ? -1 : 0)
+        })
         .then(r => r.map(e => e = { ...e, timeHr: convertHour(e.dep_time_ts) }))
         .then(r => res.json(r))
         .catch(e => res.status(500).send(`Error fetching flights: ${e.message}`))
