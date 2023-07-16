@@ -51,7 +51,12 @@ app.get('/carruseles', (req, res) => {
 app.get('/flights', (req, res) => {
     console.log("Request AEP flights data");
     fetch(`https://airlabs.co/api/v9/schedules?dep_iata=AEP&api_key=${process.env.AIRLABS_KEY}`)
-        .then(response => response.json())
-        .then(response => res.json(response))
+        .then(r => {
+            return r.json()
+        })
+        .then(r => r.response.sort((p1, p2) =>
+            (p1.dep_time_ts > p2.dep_time_ts) ? 1 :
+                (p1.dep_time_ts < p2.dep_time_ts) ? -1 : 0))
+        .then(r => res.json(r))
         .catch(e => res.status(500).send(`Error fetching flights: ${e.message}`))
-})
+}) 
