@@ -5,7 +5,10 @@ const morgan = require('morgan');
 var carouselData = require('./data');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const dotenv = require('dotenv').config();
-/* import { carruselesData } from './data'; */
+const flights = require('./db/models/flights');
+const carruseles = require('./db/models/carruseles');
+const mongoose = require('mongoose');
+const config = require('./db/db_config');
 
 const app = express();
 const PORT = 3000;
@@ -29,15 +32,29 @@ app.use((_req, res, next) => {
     next();
 });
 app.use((0, cors)());
-
+//=======START SERVER=======//
 app.listen(PORT, (error) => {
     if (!error) {
         console.log("Server is Successfully Running, listening on port " + PORT)
     }
     else
         console.log("Error occurred, server can't start", error);
-}
-);
+});
+
+//=======CONNECT TO DB=======//
+mongoose.set('strictQuery', true);
+
+mongoose
+    .connect(config.dt.mongo.url, {
+        retryWrites: true,
+        w: "majority",
+    })
+    .then(() => {
+        console.log("Started the database");
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 
 app.get('/', (req, res) => {
     res.set('Content-Type', 'application/json');
@@ -65,4 +82,69 @@ app.get('/flights', (req, res) => {
         .then(r => r.map(e => e = { ...e, timeHr: convertHour(e.dep_time_ts) }))
         .then(r => res.json(r))
         .catch(e => res.status(500).send(`Error fetching flights: ${e.message}`))
-}) 
+})
+
+//Database access routes
+//Add a new flights
+app.post("/flights/create", async (req, res) => {
+    let { destino, codigo, carrusel } = req.body;
+    try {
+        if (typeof destino === "string")
+            destino = destino.toLocaleUpperCase();
+        const flight = new flights.default({
+            destino: destino,
+            codigo: codigo,
+            carrusel: carrusel
+        });
+        const savedFlight = await flight.save();
+        res.status(200).send(savedFlight);
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+//get all flights
+app.get("/flights/all", async (req, res) => {
+    try {
+        await flights.default.find({})
+            .then((allFlights) => {
+                res.status(200).send(allFlights)
+            });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+//Add a new carousel
+app.post("/carousel/create", async (req, res) => {
+    let { direccion, numero } = req.body;
+    try {
+        if (typeof direccion === "string")
+            direccion = direccion.toLocaleUpperCase();
+        const carrusel = new carruseles.default({
+            direccion: direccion,
+            numero: numero
+        });
+        const savedCarru = await carrusel.save();
+        res.status(200).send(savedCarru);
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+//get all carousels
+app.get("/carousel/all", async (req, res) => {
+    try {
+        await carruseles.default.find({})
+            .then((allCarrus) => {
+                res.status(200).send(allCarrus)
+            });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
