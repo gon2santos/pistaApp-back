@@ -7,6 +7,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const dotenv = require('dotenv').config();
 const flights = require('./db/models/flights');
 const carruseles = require('./db/models/carruseles');
+const inscriptos = require('./db/models/inscriptos');
 const mongoose = require('mongoose');
 const config = require('./db/db_config');
 
@@ -141,6 +142,42 @@ app.get("/carousel/all", async (req, res) => {
         await carruseles.default.find({})
             .then((allCarrus) => {
                 res.status(200).send(allCarrus)
+            });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+
+//Add a new inscripto
+app.post("/inscriptos/create", async (req, res) => {
+    let { nombre, dni, trabajo, puesto, tel, email, alim } = req.body;
+    try {
+        const inscr = new inscriptos.default({
+            nombre: nombre,
+            dni: dni,
+            trabajo: trabajo,
+            puesto: puesto,
+            tel: tel,
+            email: email,
+            alim: alim
+        });
+        const savedInscr = await inscr.save();
+        res.status(200).send(savedInscr);
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+
+//get all carousels
+app.get("/inscriptos/all", async (req, res) => {
+    try {
+        await inscriptos.default.find({})
+            .then((allInscr) => {
+                res.status(200).send(allInscr)
             });
     }
     catch (err) {
