@@ -10,6 +10,7 @@ const carruseles = require('./db/models/carruseles');
 const inscriptos = require('./db/models/inscriptos');
 const mongoose = require('mongoose');
 const config = require('./db/db_config');
+const { Parser } = require('json2csv');
 
 const app = express();
 const PORT = 3000;
@@ -195,7 +196,23 @@ app.delete("/inscriptos/delete", async (req, res) => {
         if (!deletedInscr) {
             return res.status(404).send({ message: "not found" });
         }
-        res.status(200).send("unsubscribed");
+        res.status(200).send(deletedInscr);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+
+app.get("/inscriptos/csv", async (req, res) => {
+    try {
+        const allInscr = await inscriptos.default.find({});
+        const fields = ['nombre', 'dni', 'trabajo', 'puesto', 'tel', 'email', 'alim'];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(allInscr);
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('inscriptos.csv');
+        res.status(200).send(csv);
     } catch (err) {
         console.log(err);
         res.status(500).send(err);
