@@ -172,7 +172,7 @@ app.post("/inscriptos/create", async (req, res) => {
     }
 });
 
-//get all carousels
+//get all inscriptos
 app.get("/inscriptos/all", async (req, res) => {
     try {
         await inscriptos.default.find({})
@@ -181,6 +181,22 @@ app.get("/inscriptos/all", async (req, res) => {
             });
     }
     catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+
+
+//delete inscripto por dni
+app.delete("/inscriptos/delete", async (req, res) => {
+    let { dni } = req.body;
+    try {
+        const deletedInscr = await inscriptos.default.findOneAndDelete({ dni: dni });
+        if (!deletedInscr) {
+            return res.status(404).send({ message: "not found" });
+        }
+        res.status(200).send("unsubscribed");
+    } catch (err) {
         console.log(err);
         res.status(500).send(err);
     }
