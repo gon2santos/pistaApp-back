@@ -203,6 +203,8 @@ app.delete("/inscriptos/delete", async (req, res) => {
     }
 });
 
+
+//descargar csv con los inscriptos
 app.get("/inscriptos/csv", async (req, res) => {
     try {
         const allInscr = await inscriptos.default.find({});
@@ -213,6 +215,23 @@ app.get("/inscriptos/csv", async (req, res) => {
         res.header('Content-Type', 'text/csv');
         res.attachment('inscriptos.csv');
         res.status(200).send(csv);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+});
+
+
+// Search for an inscripto by dni
+app.post("/inscriptos/search", async (req, res) => {
+    let { dni } = req.body;
+    try {
+        const inscr = await inscriptos.default.findOne({ dni: dni });
+        if (inscr) {
+            res.status(200).send("found");
+        } else {
+            res.status(400).send("not found");
+        }
     } catch (err) {
         console.log(err);
         res.status(500).send(err);
